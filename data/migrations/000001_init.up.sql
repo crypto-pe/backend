@@ -1,5 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION citext;
+CREATE EXTENSION IF NOT EXISTS citext;
 CREATE DOMAIN domain_email AS citext
 CHECK(
    VALUE ~ '^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$'
