@@ -140,3 +140,54 @@ func (s *RPC) Login(ctx context.Context, ethAuthProofString string) (string, *pr
 		CreatedAt: &dbAccount.CreatedAt.Time,
 	}, nil
 }
+
+func (s *RPC) GetAccount(ctx context.Context, address string) (*proto.Account, error) {
+
+	dbAccount, err := data.DB.GetUser(ctx, []byte(address))
+	if err != nil {
+		s.Log.Err(err).Msg("Account does not exist.")
+		return nil, proto.WrapError(proto.ErrNotFound, err, "Account does not exist.")
+	}
+
+	return &proto.Account{
+		Address:   prototyp.Hash(dbAccount.Address),
+		Name:      dbAccount.Name,
+		CreatedAt: &dbAccount.CreatedAt.Time,
+		Email:     dbAccount.Email.(string),
+		Admin:     dbAccount.Admin.Bool,
+	}, nil
+
+}
+
+func (s *RPC) UpdateAccount(ctx context.Context, address, name, email string) (bool, *proto.Account, error) {
+
+	dbAccount, err := data.DB.UpdateUser(ctx, sqlc.UpdateUserParams{
+		Address: []byte(address),
+		Name:    name,
+		Email:   email,
+	})
+	if err != nil {
+		s.Log.Err(err).Msg("Error while updating account.")
+		return false, nil, proto.WrapError(proto.ErrInternal, err, "Account could not be updated")
+	}
+
+	return true, &proto.Account{
+		Address:   prototyp.Hash(address),
+		Name:      dbAccount.Name,
+		CreatedAt: &dbAccount.CreatedAt.Time,
+		Email:     dbAccount.Email.(string),
+		Admin:     dbAccount.Admin.Bool,
+	}, nil
+
+}
+
+func (s *RPC) DeleteAccount(ctx context.Context, address string) (bool, error) {
+
+	err := data.DB.DeleteUser(ctx, []byte(address))
+	if err != nil {
+		s.Log.Err(err).Msg("Error while deleting account.")
+		return false, proto.WrapError(proto.ErrInternal, err, "Error while deleting account.")
+	}
+
+	return true, nil
+}
