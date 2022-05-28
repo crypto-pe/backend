@@ -1,4 +1,4 @@
-module github.com/crypto-pe/api
+module github.com/crypto-pe/backend
 
 go 1.18
 

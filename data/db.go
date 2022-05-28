@@ -9,8 +9,8 @@ import (
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 
-	"github.com/crypto-pe/api/config"
-	"github.com/crypto-pe/api/data/sqlc"
+	"github.com/crypto-pe/backend/config"
+	"github.com/crypto-pe/backend/data/sqlc"
 	"github.com/jackc/pgx"
 )
 

@@ -46,5 +46,9 @@ build-api:
 	go build -tags='$(BUILDTAGS)' \
 	-o $(ROOT_DIR)/bin/api-server \
 	-gcflags='-e' \
-	-ldflags='-X "github.com/crypto-pe/api.VERSION=$(VERSION)" -X "github.com/crypto-pe/api.GITBRANCH=$(GITBRANCH)" -X "github.com/crypto-pe/api.GITCOMMIT=$(GITCOMMIT)" -X "github.com/crypto-pe/api.GITCOMMITDATE=$(GITCOMMITDATE)" -X "github.com/crypto-pe/api.GITCOMMITAUTHOR=$(GITCOMMITAUTHOR)"' \
+	-ldflags='-X "github.com/crypto-pe/backend.VERSION=$(VERSION)" -X "github.com/crypto-pe/backend.GITBRANCH=$(GITBRANCH)" -X "github.com/crypto-pe/backend.GITCOMMIT=$(GITCOMMIT)" -X "github.com/crypto-pe/backend.GITCOMMITDATE=$(GITCOMMITDATE)" -X "github.com/crypto-pe/backend.GITCOMMITAUTHOR=$(GITCOMMITAUTHOR)"' \
 	./cmd/api-server
+
+build-docker:
+	sudo docker buildx build --platform=linux/amd64 -f Dockerfile -t asia-south1-docker.pkg.dev/crypto-pe-351511/cryptope/api:${VERSION} --build-arg VERSION=${VERSION} --build-arg GITCOMMIT=${GITCOMMIT} --build-arg GITBRANCH=${GITBRANCH} .
+	sudo docker push asia-south1-docker.pkg.dev/crypto-pe-351511/cryptope/api:${VERSION}

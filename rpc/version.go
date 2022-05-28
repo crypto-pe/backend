@@ -3,8 +3,8 @@ package rpc
 import (
 	"context"
 
-	"github.com/crypto-pe/api"
-	"github.com/crypto-pe/api/proto"
+	api "github.com/crypto-pe/backend"
+	"github.com/crypto-pe/backend/proto"
 )
 
 // Ping is a healthcheck that returns an empty message.

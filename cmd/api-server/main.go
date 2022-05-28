@@ -9,8 +9,8 @@ import (
 	"runtime/pprof"
 	"syscall"
 
-	"github.com/crypto-pe/api/config"
-	"github.com/crypto-pe/api/server"
+	"github.com/crypto-pe/backend/config"
+	"github.com/crypto-pe/backend/server"
 	"github.com/spf13/cobra"
 )
 

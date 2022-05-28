@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/crypto-pe/api/config"
-	"github.com/crypto-pe/api/proto"
+	"github.com/crypto-pe/backend/config"
+	"github.com/crypto-pe/backend/proto"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
