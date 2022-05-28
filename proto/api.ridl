@@ -1,0 +1,84 @@
+webrpc = v1
+
+name = cryptope-api
+version = v0.0.1
+
+message Version
+  - webrpcVersion: string
+  - schemaVersion: string
+  - schemaHash: string
+  - appVersion: string
+
+message Account
+  - address: string
+    + go.field.type = prototyp.Hash
+
+  - name: string
+
+  - createdAt: timestamp
+    + go.field.type = *time.Time
+
+  - email: string
+
+  - admin: bool
+    + json = -
+
+message Organization
+  - id: string
+
+  - name: string
+
+  - createdAt: timestamp
+    + go.field.type = *time.Time
+
+  - ownerAddress: string
+    + go.field.type = prototyp.Hash
+
+  - token: TokenType
+
+message OrganizationMember
+  - organizationID: string
+
+  - memberAddress: string
+    + go.field.type = prototyp.Hash
+
+  - dateJoined: timestamp
+    + go.field.type = *time.Time
+
+  - role: string
+
+  - isAdmin: bool
+
+  - salary: uint64
+
+message Payment
+  - PaymentID: string
+
+  - OrganizationID: string
+
+  - memberAddress: string
+    + go.field.type = prototyp.Hash
+
+  - transactionHash: string
+
+  - amount: uint64
+
+  - token: TokenType
+
+  - date: timestamp
+    + go.field.type = *time.Time
+
+# Tokens we support
+enum TokenType: int
+  - USDC
+  - DAI
+
+##
+## API public methods
+##
+service API
+  #
+  # Runtime
+  #
+  - Ping() => (status: bool)
+  - Version() => (version: Version)
