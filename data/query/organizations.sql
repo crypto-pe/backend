@@ -9,6 +9,10 @@ INSERT INTO organizations(name, owner_address, token)
 VALUES ($1, $2, $3)
 RETURNING *;
 
+-- wtf?
+-- wdym?
+-- it expects uuid?
+-- nv
 -- name: GetOrganization :one
 SELECT * FROM organizations
 WHERE id = $1;
@@ -17,8 +21,7 @@ WHERE id = $1;
 UPDATE organizations
 SET
   name = $2,
-  owner_address = $3,
-  token = $4
+  token = $3
 WHERE id = $1
 RETURNING *;
 

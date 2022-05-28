@@ -57,6 +57,10 @@ SELECT id, name, created_at, owner_address, token FROM organizations
 WHERE id = $1
 `
 
+// wtf?
+// wdym?
+// it expects uuid?
+// nv
 func (q *Queries) GetOrganization(ctx context.Context, id uuid.UUID) (Organizations, error) {
 	row := q.db.QueryRowContext(ctx, getOrganization, id)
 	var i Organizations
@@ -74,26 +78,19 @@ const updateOrganization = `-- name: UpdateOrganization :one
 UPDATE organizations
 SET
   name = $2,
-  owner_address = $3,
-  token = $4
+  token = $3
 WHERE id = $1
 RETURNING id, name, created_at, owner_address, token
 `
 
 type UpdateOrganizationParams struct {
-	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
-	OwnerAddress []byte    `json:"ownerAddress"`
-	Token        []byte    `json:"token"`
+	ID    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Token []byte    `json:"token"`
 }
 
 func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (Organizations, error) {
-	row := q.db.QueryRowContext(ctx, updateOrganization,
-		arg.ID,
-		arg.Name,
-		arg.OwnerAddress,
-		arg.Token,
-	)
+	row := q.db.QueryRowContext(ctx, updateOrganization, arg.ID, arg.Name, arg.Token)
 	var i Organizations
 	err := row.Scan(
 		&i.ID,

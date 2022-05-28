@@ -109,12 +109,45 @@ service API
   # exp is timestamp
   #
   - CreateAccount(ethAuthProofString: string, name: string, email: string) => (status: bool, jwtToken: string, account: Account)
+
   - Login(ethAuthProofString: string) => (jwtToken: string, account: Account)
-  - GetAccount(address: string) => (account: Account)
-  - UpdateAccount(address: string, name: string, email: string) => (updateStatus: bool, account: Account)
-  - DeleteUser(address: string) => (deleteStatus: bool)
+
+  - GetAccount() => (account: Account)
+
+  - UpdateAccount(account: Account) => (updateStatus: bool, account: Account)
+  
+  - DeleteAccount(address: string) => (deleteStatus: bool)
 
 
   #
   # Organization
   #
+  - CreateOrganization(name: string, token: TokenType) => (createStatus: bool, organization: Organization)
+
+  - GetOrganization(organization_uuid: string) => (organization: Organization)
+
+  - UpdateOrganization(organization: Organization) => (updateStatus: bool, organization: Organization)
+
+  - DeleteOrganization(organization_uuid: string) => (deleteStatus: bool)
+
+  #
+  # Organization members
+  #
+
+  - CreateOrganizationMember(organization_uuid: string, member_address: string, role: string, isAdmin: bool, salary: int) => (createStatus: bool, organizationMember: OrganizationMember)
+
+  - GetOrganizationMember(organization_uuid: string, member_address: string) => (organizationMember: OrganizationMember)
+
+  - GetAllOrganizationMembers(organization_uuid: string) => (organizationMembers: []OrganizationMember)
+
+  - UpdateOrganizationMember(organizationMember: OrganizationMember) => (updateStatus: bool, organizationMember: OrganizationMember)
+
+  - DeleteOrganizationMember(organization_uuid: string, member_address: string) => (deleteStatus: bool)
+
+  #
+  # Payment
+  #
+
+  - CreatePayment(organization_id string, member_address: string, transaction_hash: string, amount: int, token: *proto.TokenType) => (createStatus: bool, payment: Payment)
+
+  - GetPayments() => (payment: Payment)
