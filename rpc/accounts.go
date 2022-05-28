@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -57,7 +56,7 @@ func (s *RPC) CreateAccount(ctx context.Context, ethAuthProofString string, name
 	}
 
 	addr := prototyp.HashFromString(proof.Address).String()
-	fmt.Println("addr", addr)
+
 	// create account
 	dbAccount := sqlc.CreateUserParams{
 		Name:    name,
@@ -68,6 +67,9 @@ func (s *RPC) CreateAccount(ctx context.Context, ethAuthProofString string, name
 	account, err := data.DB.CreateUser(ctx, dbAccount)
 	if err != nil {
 		s.Log.Err(err).Msg("unable to create account")
+		if strings.Contains(err.Error(), "SQLSTATE 23505") {
+			return false, "", nil, proto.Errorf(proto.ErrAlreadyExists, "account already exists")
+		}
 		return false, "", nil, proto.WrapError(proto.ErrInternal, err, "unable to create account")
 	}
 
@@ -82,5 +84,59 @@ func (s *RPC) CreateAccount(ctx context.Context, ethAuthProofString string, name
 }
 
 func (s *RPC) Login(ctx context.Context, ethAuthProofString string) (string, *proto.Account, error) {
-	return "", &proto.Account{}, nil
+	var jwtToken string
+
+	ethAuth, err := ethauth.New()
+	if err != nil {
+		return "", nil, err
+	}
+
+	valid, proof, err := ethAuth.DecodeProof(ethAuthProofString)
+	if err != nil {
+		return "", nil, proto.WrapError(proto.ErrPermissionDenied, err, "invalid ethauth proof")
+	}
+	if !valid || proof == nil {
+		return "", nil, proto.Errorf(proto.ErrPermissionDenied, "invalid ethauth proof")
+	}
+
+	// LATER
+	// // Validate the origin in the proof claims against the http request origin header
+	// if proof.Claims.Origin != "" {
+	// 	httpReq, _ := ctx.Value(proto.HTTPRequestCtxKey).(*http.Request)
+	// 	if httpReq.Header.Get("Origin") != proof.Claims.Origin {
+	// 		return false, "", "", nil, proto.Errorf(proto.ErrInvalidArgument, "ethauth proof origin does not match the http request")
+	// 	}
+	// }
+
+	jwtClaims := map[string]interface{}{
+		"account": strings.ToLower(proof.Address),
+		"iat":     time.Now().Unix(),
+		"exp":     proof.Claims.ExpiresAt,
+		"app":     proof.Claims.App,
+	}
+
+	if proof.Claims.IssuedAt != 0 {
+		jwtClaims["iat"] = proof.Claims.IssuedAt
+	}
+	// if proof.Claims.Origin != "" {
+	// 	jwtClaims["ogn"] = proof.Claims.Origin
+	// }
+	_, jwtToken, err = s.JWTAuth.Encode(jwtClaims)
+	if err != nil {
+		return "", nil, proto.Errorf(proto.ErrPermissionDenied, "unable to create jwt")
+	}
+	addr := prototyp.HashFromString(proof.Address).String()
+
+	dbAccount, err := data.DB.GetUser(ctx, []byte(addr))
+	if err != nil {
+		s.Log.Err(err).Msg("unable to get account")
+		return "", nil, proto.WrapError(proto.ErrInternal, err, "unable to get account")
+	}
+
+	return jwtToken, &proto.Account{
+		Address:   prototyp.HashFromBytes(dbAccount.Address),
+		Name:      dbAccount.Name,
+		Email:     dbAccount.Email.(string),
+		CreatedAt: &dbAccount.CreatedAt.Time,
+	}, nil
 }
