@@ -110,3 +110,11 @@ service API
   #
   - CreateAccount(ethAuthProofString: string, name: string, email: string) => (status: bool, jwtToken: string, account: Account)
   - Login(ethAuthProofString: string) => (jwtToken: string, account: Account)
+  - GetAccount(address: string) => (account: Account)
+  - UpdateAccount(address: string, name: string, email: string) => (updateStatus: bool, account: Account)
+  - DeleteUser(address: string) => (deleteStatus: bool)
+
+
+  #
+  # Organization
+  #
