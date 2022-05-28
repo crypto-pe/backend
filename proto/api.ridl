@@ -111,24 +111,17 @@ service API
   - CreateAccount(ethAuthProofString: string, name: string, email: string) => (status: bool, jwtToken: string, account: Account)
 
   - Login(ethAuthProofString: string) => (jwtToken: string, account: Account)
-<<<<<<< HEAD
 
-  - GetAccount() => (account: Account)
+  - GetAccount(address: string) => (account: Account)
 
   - UpdateAccount(account: Account) => (updateStatus: bool, account: Account)
   
   - DeleteAccount(address: string) => (deleteStatus: bool)
-=======
-  - GetAccount(address: string) => (account: Account)
-  - UpdateAccount(address: string, name: string, email: string) => (updateStatus: bool, account: Account)
-  - DeleteUser(address: string) => (deleteStatus: bool)
->>>>>>> 9ffaa47839d38f9aee90b7701fd81dbf6deaa968
 
 
   #
   # Organization
   #
-<<<<<<< HEAD
   - CreateOrganization(name: string, token: TokenType) => (createStatus: bool, organization: Organization)
 
   - GetOrganization(organization_uuid: string) => (organization: Organization)
@@ -150,13 +143,3 @@ service API
   - UpdateOrganizationMember(organizationMember: OrganizationMember) => (updateStatus: bool, organizationMember: OrganizationMember)
 
   - DeleteOrganizationMember(organization_uuid: string, member_address: string) => (deleteStatus: bool)
-
-  #
-  # Payment
-  #
-
-  - CreatePayment(organization_id string, member_address: string, transaction_hash: string, amount: int, token: *proto.TokenType) => (createStatus: bool, payment: Payment)
-
-  - GetPayments() => (payment: Payment)
-=======
->>>>>>> 9ffaa47839d38f9aee90b7701fd81dbf6deaa968

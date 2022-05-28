@@ -1,0 +1,1 @@
+{"buildTargets":["build-api","build-docker","createdb","dropdb","make","migrate_create","migrate_down","migrate_up","postgres","proto","run","run_bin","sqlc_generate"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
