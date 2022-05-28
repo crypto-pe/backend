@@ -37,8 +37,11 @@ async function prooffunc() {
     ethAuthProofString:  proofString,
     name: 'John Doe',
     email: 'johndoe@gmail.com',
-  }).then((something) => console.log(something))
+  }).then((something) => console.log(something)).catch((err) => console.log(err))
 
+  client.login({
+    ethAuthProofString:  proofString,
+  }).then((something) => console.log(something)).catch((err) => console.log(err))
 }
 
 prooffunc()
