@@ -5,8 +5,8 @@
 -- admin	boolean NULL [false]
 
 -- name: CreateUser :one
-INSERT INTO accounts(address, name, email, admin)
-VALUES ($1, $2, $3, $3)
+INSERT INTO accounts(address, name, email)
+VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetUser :one
@@ -16,8 +16,7 @@ SELECT * FROM accounts WHERE address = $1;
 UPDATE accounts 
 SET
   name = $2,
-  email = $3,
-  admin = $4
+  email = $3
 WHERE address = $1
 RETURNING *;
 

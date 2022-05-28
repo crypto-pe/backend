@@ -96,3 +96,17 @@ service API
   # Tokens
   #
   - GetSupportedTokens() => (tokens: []Token)
+
+
+  #
+  # Account
+  #
+  # proof = eth.<address>.<claims>.<signature>.<extra>
+  # interface Claims {
+  # app: string
+  # exp: number
+  # }
+  # exp is timestamp
+  #
+  - CreateAccount(ethAuthProofString: string, name: string, email: string) => (status: bool, jwtToken: string, account: Account)
+  - Login(ethAuthProofString: string) => (jwtToken: string, account: Account)
