@@ -159,9 +159,13 @@ func (s *RPC) GetAccount(ctx context.Context, address string) (*proto.Account, e
 
 }
 
+<<<<<<< HEAD
 func (s *RPC) UpdateAccount(ctx context.Context, account *proto.Account) (bool, *proto.Account, error) {
 
 	address, name, email := account.Address, account.Name, account.Email
+=======
+func (s *RPC) UpdateAccount(ctx context.Context, address, name, email string) (bool, *proto.Account, error) {
+>>>>>>> 9ffaa47839d38f9aee90b7701fd81dbf6deaa968
 
 	dbAccount, err := data.DB.UpdateUser(ctx, sqlc.UpdateUserParams{
 		Address: []byte(address),
