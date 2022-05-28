@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	rpcmw "github.com/crypto-pe/backend/rpc/middleware"
+
 	"github.com/crypto-pe/backend/config"
 	"github.com/crypto-pe/backend/proto"
 	"github.com/go-chi/chi/v5"
@@ -120,13 +122,13 @@ func (s *RPC) handler() http.Handler {
 	r.Use(middleware.PageRoute("/favicon.ico", http.HandlerFunc(stubHandler(""))))
 
 	// // Seek and verify JWT tokens, and put on request context
-	// r.Use(jwtauth.Verifier(s.API.JWTAuth))
+	r.Use(jwtauth.Verifier(s.JWTAuth))
 
 	// // Session middleware
-	// r.Use(rpcmw.Session)
+	r.Use(rpcmw.Session)
 
 	// // Access control
-	// r.Use(rpcmw.AccessControl)
+	r.Use(rpcmw.AccessControl)
 	// Mount rpc endpoints
 	rpcHandler := proto.NewAPIServer(s)
 	// r.Handle("/rpc/ArcadeumAPI/*", chi.Chain(middleware.PathRewrite("/rpc/ArcadeumAPI/", "/rpc/API/")).Handler(rpcHandler))

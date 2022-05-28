@@ -11,6 +11,7 @@ require (
 	github.com/go-chi/cors v1.2.1
 	github.com/go-chi/httplog v0.2.4
 	github.com/go-chi/httprate v0.5.3
+	github.com/go-chi/jwtauth v1.2.0
 	github.com/go-chi/jwtauth/v5 v5.0.2
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
