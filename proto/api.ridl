@@ -52,9 +52,9 @@ message OrganizationMember
   - salary: uint64
 
 message Payment
-  - PaymentID: string
+  - paymentID: string
 
-  - OrganizationID: string
+  - organizationID: string
 
   - memberAddress: string
     + go.field.type = prototyp.Hash
@@ -67,6 +67,14 @@ message Payment
 
   - date: timestamp
     + go.field.type = *time.Time
+
+message Token
+  - address: string
+    + go.field.type = prototyp.Hash
+
+  - metadata: map<string, any>
+
+  - decimals: uint8
 
 # Tokens we support
 enum TokenType: int
@@ -82,3 +90,8 @@ service API
   #
   - Ping() => (status: bool)
   - Version() => (version: Version)
+
+  #
+  # Tokens
+  #
+  - GetSupportedTokens() => (tokens: []Token)
