@@ -15,6 +15,6 @@ RETURNING *;
 SELECT * FROM salary_payments
 WHERE transaction_hash = $1;
 
---name: GetAllMemberSalaryPayments :many
+-- name: GetAllMemberSalaryPayments :many
 SELECT * FROM salary_payments
 WHERE member_address = $1;

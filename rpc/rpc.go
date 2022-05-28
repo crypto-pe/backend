@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog"
 	"github.com/go-chi/httprate"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/rs/zerolog"
 )
 
@@ -22,6 +23,8 @@ type RPC struct {
 	Log    zerolog.Logger
 
 	HTTP *http.Server
+
+	JWTAuth *jwtauth.JWTAuth
 
 	running   int32
 	startTime time.Time
@@ -36,9 +39,10 @@ func NewRPC(cfg *config.Config, logger zerolog.Logger) (*RPC, error) {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	s := &RPC{
-		Config: cfg,
-		Log:    logger.With().Str("ps", "rpc").Logger(),
-		HTTP:   httpServer,
+		Config:  cfg,
+		Log:     logger.With().Str("ps", "rpc").Logger(),
+		JWTAuth: jwtauth.New("HS256", []byte(cfg.Auth.JWTSecret), nil),
+		HTTP:    httpServer,
 	}
 	return s, nil
 }
