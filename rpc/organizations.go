@@ -54,13 +54,14 @@ func (s *RPC) CreateOrganization(ctx context.Context, name string, tokenType *pr
 
 // create org done
 
-func (s *RPC) GetOrganization(ctx context.Context, organization_uuid_string string) (*proto.Organization, error) {
-	organization_uuid, uuiderr := uuid.FromBytes([]byte(organization_uuid_string))
-	if uuiderr != nil {
-		s.Log.Err(uuiderr).Msg("Invalid UUID provided")
-		return nil, proto.WrapError(proto.ErrInvalidArgument, uuiderr, "Invalid UUID provided")
+func (s *RPC) GetOrganization(ctx context.Context, organizationID string) (*proto.Organization, error) {
+	organizationUUID, err := uuid.FromBytes([]byte(organizationID))
+	if err != nil {
+		s.Log.Err(err).Msg("Invalid UUID provided")
+		return nil, proto.WrapError(proto.ErrInvalidArgument, err, "Invalid UUID provided")
 	}
-	dbOrganization, err := data.DB.GetOrganization(ctx, organization_uuid)
+
+	dbOrganization, err := data.DB.GetOrganization(ctx, organizationUUID)
 	if err != nil {
 		s.Log.Err(err).Msg("Organization does not exist.")
 		return nil, proto.WrapError(proto.ErrNotFound, err, "Organization does not exist.")
@@ -74,7 +75,7 @@ func (s *RPC) GetOrganization(ctx context.Context, organization_uuid_string stri
 	}
 
 	return &proto.Organization{
-		Id:           organization_uuid_string,
+		Id:           organizationUUID.String(),
 		Name:         dbOrganization.Name,
 		CreatedAt:    &dbOrganization.CreatedAt,
 		OwnerAddress: prototyp.Hash(dbOrganization.OwnerAddress),
@@ -83,37 +84,103 @@ func (s *RPC) GetOrganization(ctx context.Context, organization_uuid_string stri
 }
 
 func (s *RPC) UpdateOrganization(ctx context.Context, organization *proto.Organization) (bool, *proto.Organization, error) {
-	account, ok := ctx.Value(middleware.UserCtxKey).(sqlc.Accounts)
-	if !ok {
-		return false, nil, proto.WrapError(proto.ErrInternal, errors.New("could not get account"), "could not update organization")
+	organizationUuid, err := uuid.FromBytes([]byte(organization.Id))
+	if err != nil {
+		s.Log.Err(err).Msg("Invalid UUID provided")
+		return false, nil, proto.WrapError(proto.ErrInvalidArgument, err, "Invalid UUID provided")
 	}
 
-	data.DB.GetOrganization(ctx, organization.Id)
-	// get?
+	isAdmin, err := s.checkOrgAdmin(ctx, organizationUuid)
+	if err != nil {
+		return false, nil, err
+	}
 
-	// check if the guy is an owner or something, okok
-	// wait we forgot something
-	// while creating org we should create orgMember for the owner
-	// and make him admin
-	// and getorg member here, instead of org
+	if !isAdmin {
+		return false, nil, proto.WrapError(proto.ErrPermissionDenied, errors.New("not an admin"), "not an admin")
+	}
 
-	// admin is for site admins right?
-	// but we can do that :mhm:
-	// yea but org owner is also admin
+	dbOrg, err := data.DB.UpdateOrganization(ctx, sqlc.UpdateOrganizationParams{
+		ID:    organizationUuid,
+		Name:  organization.Name,
+		Token: []byte(organization.Token.String()),
+	})
+
+	if err != nil {
+		s.Log.Err(err).Msg("Could not update organization")
+		return false, nil, proto.WrapError(proto.ErrInternal, err, "Could not update organization")
+	}
+	return true, &proto.Organization{
+		Id:           organizationUuid.String(),
+		Name:         dbOrg.Name,
+		CreatedAt:    &dbOrg.CreatedAt,
+		OwnerAddress: prototyp.Hash(dbOrg.OwnerAddress),
+		Token:        organization.Token,
+	}, nil
 }
 
-func (s *RPC) DeleteOrganization(ctx context.Context, organization_uuid_string string) (bool, error) {
-	organization_uuid, uuiderr := uuid.FromBytes([]byte(organization_uuid_string))
-	if uuiderr != nil {
-		s.Log.Err(uuiderr).Msg("Invalid UUID provided")
-		return false, proto.WrapError(proto.ErrInvalidArgument, uuiderr, "Invalid UUID provided")
+func (s *RPC) DeleteOrganization(ctx context.Context, organizationID string) (bool, error) {
+	organizationUuid, err := uuid.FromBytes([]byte(organizationID))
+	if err != nil {
+		s.Log.Err(err).Msg("Invalid UUID provided")
+		return false, proto.WrapError(proto.ErrInvalidArgument, err, "Invalid UUID provided")
+	}
+	isAdmin, err := s.checkOrgAdmin(ctx, organizationUuid)
+	if err != nil {
+		return false, err
 	}
 
-	err := data.DB.DeleteOrganization(ctx, organization_uuid)
+	if !isAdmin {
+		return false, proto.WrapError(proto.ErrPermissionDenied, errors.New("not an admin"), "not an admin")
+	}
+
+	err = data.DB.DeleteOrganization(ctx, organizationUuid)
 	if err != nil {
 		return false, proto.WrapError(proto.ErrInternal, err, "Could not delete the organization.")
 	}
 
 	return true, nil
 
+}
+
+func (s *RPC) GetAllOrganizations(ctx context.Context) ([]*proto.Organization, error) {
+	user, ok := ctx.Value(middleware.UserCtxKey).(*sqlc.Accounts)
+	// wont fail cause we ensure in middleware, ok
+	if !ok {
+		s.Log.Err(errors.New("User does not exist")).Msg("Could not get user.")
+		return nil, proto.WrapError(proto.ErrPermissionDenied, errors.New("User does not exist"), "Could not get user")
+	}
+
+	orgs, err := data.DB.GetAllOrganizations(ctx, user.Address)
+	if err != nil {
+		s.Log.Err(err).Msg("Could not get organizations")
+		return nil, proto.WrapError(proto.ErrInternal, err, "Could not get organizations")
+	}
+	resultOrgs := make([]*proto.Organization, len(orgs))
+	for i, org := range orgs {
+		tokenType, _ := GetTokeTypeFromAddress(prototyp.HashFromBytes(org.Token).String())
+		resultOrgs[i] = &proto.Organization{
+			Id:           org.ID.String(),
+			Name:         org.Name,
+			CreatedAt:    &org.CreatedAt,
+			OwnerAddress: prototyp.Hash(org.OwnerAddress),
+			Token:        &tokenType,
+		}
+	}
+	return resultOrgs, nil
+}
+
+func (s *RPC) checkOrgAdmin(ctx context.Context, organizationID uuid.UUID) (bool, error) {
+	orgMember, err := data.DB.GetOrgamizationMember(ctx, sqlc.GetOrgamizationMemberParams{
+		OrganizationID: organizationID,
+		MemberAddress:  []byte(ctx.Value(middleware.WalletCtxKey).(string)),
+	})
+	if err != nil {
+		return false, proto.WrapError(proto.ErrInternal, err, "Could not get org member")
+	}
+
+	if !orgMember.IsAdmin.Bool {
+		return false, nil
+	}
+
+	return true, nil
 }

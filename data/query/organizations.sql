@@ -28,3 +28,6 @@ RETURNING *;
 -- name: DeleteOrganization :exec
 DELETE FROM organizations
 WHERE id = $1;
+
+-- name: GetAllOrganizations :many
+SELECT * FROM organizations WHERE id IN (SELECT organization_id FROM organization_members WHERE member_address=$1);

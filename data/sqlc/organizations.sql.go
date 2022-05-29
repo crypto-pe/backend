@@ -52,6 +52,39 @@ func (q *Queries) DeleteOrganization(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getAllOrganizations = `-- name: GetAllOrganizations :many
+SELECT id, name, created_at, owner_address, token FROM organizations WHERE id IN (SELECT organization_id FROM organization_members WHERE member_address=$1)
+`
+
+func (q *Queries) GetAllOrganizations(ctx context.Context, memberAddress []byte) ([]Organizations, error) {
+	rows, err := q.db.QueryContext(ctx, getAllOrganizations, memberAddress)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Organizations
+	for rows.Next() {
+		var i Organizations
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.OwnerAddress,
+			&i.Token,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOrganization = `-- name: GetOrganization :one
 SELECT id, name, created_at, owner_address, token FROM organizations
 WHERE id = $1

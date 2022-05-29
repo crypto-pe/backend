@@ -124,22 +124,15 @@ service API
   #
   - CreateOrganization(name: string, token: TokenType) => (createStatus: bool, organization: Organization)
 
-  - GetOrganization(organization_uuid: string) => (organization: Organization)
+  - GetOrganization(organizationID: string) => (organization: Organization)
 
   - UpdateOrganization(organization: Organization) => (updateStatus: bool, organization: Organization)
 
-  - DeleteOrganization(organization_uuid: string) => (deleteStatus: bool)
+  - DeleteOrganization(organizationID: string) => (deleteStatus: bool)
+
+  - GetAllOrganizations() => (organizations: []Organization)
 
   #
   # Organization members
   #
 
-  - CreateOrganizationMember(organization_uuid: string, member_address: string, role: string, isAdmin: bool, salary: int) => (createStatus: bool, organizationMember: OrganizationMember)
-
-  - GetOrganizationMember(organization_uuid: string, member_address: string) => (organizationMember: OrganizationMember)
-
-  - GetAllOrganizationMembers(organization_uuid: string) => (organizationMembers: []OrganizationMember)
-
-  - UpdateOrganizationMember(organizationMember: OrganizationMember) => (updateStatus: bool, organizationMember: OrganizationMember)
-
-  - DeleteOrganizationMember(organization_uuid: string, member_address: string) => (deleteStatus: bool)
