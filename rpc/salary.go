@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *RPC) CreateSalaryPayments(ctx context.Context, organizationID string, memberAddressesAmountMap map[string]uint64, transactionHashstring, tokenType *proto.TokenType) (bool, *[]proto.Payment, error) {
+func (s *RPC) CreateSalaryPayments(ctx context.Context, organizationID string, memberAddressesAmountMap map[string]uint64, transactionHash string, tokenType *proto.TokenType) (bool, []*proto.Payment, error) {
 
 	organizationUuid, err := uuid.FromBytes([]byte(organizationID))
 	if err != nil {
@@ -31,16 +31,16 @@ func (s *RPC) CreateSalaryPayments(ctx context.Context, organizationID string, m
 
 	tokenAddr, _ := GetTokenAddressFromTokenType(tokenType)
 
-	var protoPayments []proto.Payment
+	var protoPayments []*proto.Payment
 
 	for address, amount := range memberAddressesAmountMap {
 
-		payment, err := data.DB.CreateSalaryPayment(ctx, sqlc.CreateSalaryPaymentParams{
+		payment, err := data.DB.CreateSalaryPayments(ctx, sqlc.CreateSalaryPaymentsParams{
 			OrganizationID:  organizationUuid,
-			MemberAddress:   []byte(address),
-			TransactionHash: transactionHashstring.String(),
+			MemberAddress:   address,
+			TransactionHash: transactionHash,
 			Amount:          strconv.Itoa(int(amount)),
-			Token:           []byte(tokenAddr),
+			Token:           tokenAddr,
 		})
 
 		if err != nil {
@@ -48,7 +48,7 @@ func (s *RPC) CreateSalaryPayments(ctx context.Context, organizationID string, m
 			return false, nil, proto.WrapError(proto.ErrInternal, err, "Could not create salary payment")
 		}
 
-		protoPayments = append(protoPayments, proto.Payment{
+		protoPayments = append(protoPayments, &proto.Payment{
 			PaymentID:       payment.PaymentID.String(),
 			OrganizationID:  organizationID,
 			MemberAddress:   prototyp.Hash(payment.MemberAddress),
@@ -59,37 +59,11 @@ func (s *RPC) CreateSalaryPayments(ctx context.Context, organizationID string, m
 		})
 	}
 
-	return true, &protoPayments, nil
+	return true, protoPayments, nil
 
 }
 
-func (s *RPC) GetSalaryPaymentByTxnHash(ctx context.Context, transactionHash string) (*proto.Payment, error) {
-
-	payment, err := data.DB.GetSalaryPayment(ctx, transactionHash)
-	if err != nil {
-		s.Log.Err(err).Msg("Could not find salary payment")
-		return nil, proto.WrapError(proto.ErrNotFound, err, "Could not find salary payment")
-	}
-
-	paymentAmount, _ := strconv.Atoi(payment.Amount)
-	token, err := GetTokeTypeFromAddress(string(payment.Token))
-	if err != nil {
-		return nil, proto.WrapError(proto.ErrInternal, err, "Invalid token type")
-	}
-
-	return &proto.Payment{
-		PaymentID:       payment.PaymentID.String(),
-		OrganizationID:  payment.OrganizationID.String(),
-		MemberAddress:   prototyp.Hash(payment.MemberAddress),
-		TransactionHash: payment.TransactionHash,
-		Amount:          uint64(paymentAmount),
-		Token:           &token,
-		Date:            &payment.Date,
-	}, nil
-
-}
-
-func (s *RPC) GetOrgMemberSalaryPaymentsHistory(ctx context.Context, organizationID string, memberAddress string) (*[]proto.Payment, error) {
+func (s *RPC) GetOrgMemberSalaryPaymentsHistory(ctx context.Context, organizationID string, memberAddress string) ([]*proto.Payment, error) {
 	organizationUuid, err := uuid.FromBytes([]byte(organizationID))
 	if err != nil {
 		s.Log.Err(err).Msg("Invalid UUID provided")
@@ -97,11 +71,11 @@ func (s *RPC) GetOrgMemberSalaryPaymentsHistory(ctx context.Context, organizatio
 	}
 
 	payments, err := data.DB.GetOrgMemberSalaryPaymentsHistory(ctx, sqlc.GetOrgMemberSalaryPaymentsHistoryParams{
-		MemberAddress:  []byte(memberAddress),
+		MemberAddress:  memberAddress,
 		OrganizationID: organizationUuid,
 	})
 
-	var protoPayemnts []proto.Payment
+	var protoPayemnts []*proto.Payment
 
 	for _, payment := range payments {
 
@@ -111,7 +85,7 @@ func (s *RPC) GetOrgMemberSalaryPaymentsHistory(ctx context.Context, organizatio
 		}
 
 		paymentAmount, _ := strconv.Atoi(payment.Amount)
-		protoPayemnts = append(protoPayemnts, proto.Payment{
+		protoPayemnts = append(protoPayemnts, &proto.Payment{
 			PaymentID:       payment.PaymentID.String(),
 			OrganizationID:  payment.OrganizationID.String(),
 			MemberAddress:   prototyp.Hash(payment.MemberAddress),
@@ -122,18 +96,18 @@ func (s *RPC) GetOrgMemberSalaryPaymentsHistory(ctx context.Context, organizatio
 		})
 	}
 
-	return &protoPayemnts, nil
+	return protoPayemnts, nil
 
 }
 
-func (s *RPC) GetMemberOverallSalaryHistory(ctx context.Context, memberAddress string) (*[]proto.Payment, error) {
-	payments, err := data.DB.GetMemberOverallSalaryHistory(ctx, []byte(memberAddress))
+func (s *RPC) GetMemberOverallSalaryHistory(ctx context.Context, memberAddress string) ([]*proto.Payment, error) {
+	payments, err := data.DB.GetMemberOverallSalaryHistory(ctx, memberAddress)
 	if err != nil {
 		s.Log.Err(err).Msg("Could not find any member salary payment")
 		return nil, proto.WrapError(proto.ErrNotFound, err, "Could not find any member salary payment")
 	}
 
-	var protoPayemnts []proto.Payment
+	var protoPayemnts []*proto.Payment
 
 	for _, payment := range payments {
 
@@ -143,7 +117,7 @@ func (s *RPC) GetMemberOverallSalaryHistory(ctx context.Context, memberAddress s
 		}
 
 		paymentAmount, _ := strconv.Atoi(payment.Amount)
-		protoPayemnts = append(protoPayemnts, proto.Payment{
+		protoPayemnts = append(protoPayemnts, &proto.Payment{
 			PaymentID:       payment.PaymentID.String(),
 			OrganizationID:  payment.OrganizationID.String(),
 			MemberAddress:   prototyp.Hash(payment.MemberAddress),
@@ -154,5 +128,5 @@ func (s *RPC) GetMemberOverallSalaryHistory(ctx context.Context, memberAddress s
 		})
 	}
 
-	return &protoPayemnts, nil
+	return protoPayemnts, nil
 }

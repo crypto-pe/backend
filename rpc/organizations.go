@@ -2,7 +2,9 @@ package rpc
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/0xsequence/go-sequence/lib/prototyp"
@@ -14,7 +16,7 @@ import (
 )
 
 func (s *RPC) CreateOrganization(ctx context.Context, name string, tokenType *proto.TokenType) (bool, *proto.Organization, error) {
-	user, ok := ctx.Value(middleware.UserCtxKey).(*sqlc.Accounts)
+	user, ok := ctx.Value(middleware.UserCtxKey).(sqlc.Accounts)
 	// wont fail cause we ensure in middleware, ok
 	if !ok {
 		s.Log.Err(errors.New("User does not exist")).Msg("Could not get user.")
@@ -30,7 +32,7 @@ func (s *RPC) CreateOrganization(ctx context.Context, name string, tokenType *pr
 		sqlc.CreateOrganizationParams{
 			Name:         name,
 			OwnerAddress: user.Address,
-			Token:        []byte(tokenAddress), // create a constant method
+			Token:        tokenAddress, // create a constant method
 		},
 	)
 	if err != nil {
@@ -41,11 +43,26 @@ func (s *RPC) CreateOrganization(ctx context.Context, name string, tokenType *pr
 		return false, nil, proto.WrapError(proto.ErrInternal, err, "unable to create org")
 	}
 
+	_, err = data.DB.CreateOrganizationMember(ctx, sqlc.CreateOrganizationMemberParams{
+		OrganizationID: org.ID,
+		MemberAddress:  user.Address,
+		Role:           "owner",
+		IsAdmin:        sql.NullBool{Bool: true, Valid: true},
+		Salary: sql.NullString{
+			String: fmt.Sprintf("%d", 0),
+			Valid:  true,
+		},
+	})
+
+	if err != nil {
+		s.Log.Err(err).Msg("unable to create account")
+	}
+
 	respOrg := proto.Organization{
 		Id:           org.ID.String(),
 		Name:         org.Name,
 		CreatedAt:    &org.CreatedAt,
-		OwnerAddress: prototyp.HashFromBytes(org.OwnerAddress),
+		OwnerAddress: prototyp.HashFromString(org.OwnerAddress),
 		Token:        tokenType, // reverse here
 	}
 
@@ -67,10 +84,10 @@ func (s *RPC) GetOrganization(ctx context.Context, organizationID string) (*prot
 		return nil, proto.WrapError(proto.ErrNotFound, err, "Organization does not exist.")
 	}
 
-	tokenType, err := GetTokeTypeFromAddress(prototyp.HashFromBytes(dbOrganization.Token).String())
+	tokenType, err := GetTokeTypeFromAddress(prototyp.HashFromString(dbOrganization.Token).String())
 
 	if err != nil {
-		s.Log.Err(err).Msg(prototyp.HashFromBytes(dbOrganization.Token).String() + " cannot find token")
+		s.Log.Err(err).Msg(prototyp.HashFromString(dbOrganization.Token).String() + " cannot find token")
 		return nil, proto.WrapError(proto.ErrInternal, err, "could not get org")
 	}
 
@@ -102,7 +119,7 @@ func (s *RPC) UpdateOrganization(ctx context.Context, organization *proto.Organi
 	dbOrg, err := data.DB.UpdateOrganization(ctx, sqlc.UpdateOrganizationParams{
 		ID:    organizationUuid,
 		Name:  organization.Name,
-		Token: []byte(organization.Token.String()),
+		Token: organization.Token.String(),
 	})
 
 	if err != nil {
@@ -143,21 +160,23 @@ func (s *RPC) DeleteOrganization(ctx context.Context, organizationID string) (bo
 }
 
 func (s *RPC) GetAllOrganizations(ctx context.Context) ([]*proto.Organization, error) {
-	user, ok := ctx.Value(middleware.UserCtxKey).(*sqlc.Accounts)
+	user, ok := ctx.Value(middleware.UserCtxKey).(sqlc.Accounts)
 	// wont fail cause we ensure in middleware, ok
 	if !ok {
 		s.Log.Err(errors.New("User does not exist")).Msg("Could not get user.")
 		return nil, proto.WrapError(proto.ErrPermissionDenied, errors.New("User does not exist"), "Could not get user")
 	}
 
-	orgs, err := data.DB.GetAllOrganizations(ctx, user.Address)
+	orgs, err := data.DB.GetAllOrganizations(ctx, prototyp.HashFromString(user.Address).String())
 	if err != nil {
 		s.Log.Err(err).Msg("Could not get organizations")
 		return nil, proto.WrapError(proto.ErrInternal, err, "Could not get organizations")
 	}
+	fmt.Println("orgs", orgs, prototyp.HashFromString(user.Address))
+	// 0x307865306339383238646565333431316132386363623462623832613138643061616432343438396530
 	resultOrgs := make([]*proto.Organization, len(orgs))
 	for i, org := range orgs {
-		tokenType, _ := GetTokeTypeFromAddress(prototyp.HashFromBytes(org.Token).String())
+		tokenType, _ := GetTokeTypeFromAddress(org.Token)
 		resultOrgs[i] = &proto.Organization{
 			Id:           org.ID.String(),
 			Name:         org.Name,
@@ -172,7 +191,7 @@ func (s *RPC) GetAllOrganizations(ctx context.Context) ([]*proto.Organization, e
 func (s *RPC) checkOrgAdmin(ctx context.Context, organizationID uuid.UUID) (bool, error) {
 	orgMember, err := data.DB.GetOrganizationMember(ctx, sqlc.GetOrganizationMemberParams{
 		OrganizationID: organizationID,
-		MemberAddress:  []byte(ctx.Value(middleware.WalletCtxKey).(string)),
+		MemberAddress:  ctx.Value(middleware.WalletCtxKey).(string),
 	})
 	if err != nil {
 		return false, proto.WrapError(proto.ErrInternal, err, "Could not get org member")

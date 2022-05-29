@@ -1,5 +1,5 @@
 import fetch from 'cross-fetch'
-import { API, GetSupportedTokensReturn } from './api.gen'
+import { API, GetSupportedTokensReturn, TokenType } from './api.gen'
 import { ethers } from 'ethers'
 import {
   ETHAuth,
@@ -15,7 +15,7 @@ const client = new API('http://localhost:8000', fetch)
 
 const authHeaders = {
   Authorization:
-    "BEARER eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiMHhlMGM5ODI4ZGVlMzQxMWEyOGNjYjRiYjgyYTE4ZDBhYWQyNDQ4OWUwIiwiYXBwIjoiYXBpLXRlc3RpbmctY2xpZW50IiwiZXhwIjoxNjc5NzIyNTg1LCJpYXQiOjE2NTM4MDI1ODV9.dTCx9t-tG0SDF7JBAOKCZwwQsiNxejYFOsV0uIPoId4",
+    "BEARER eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiMHhlMGM5ODI4ZGVlMzQxMWEyOGNjYjRiYjgyYTE4ZDBhYWQyNDQ4OWUwIiwiYXBwIjoiYXBpLXRlc3RpbmctY2xpZW50IiwiZXhwIjoxNjc5NzI3NTU1LCJpYXQiOjE2NTM4MDc1NTV9.wTOp6TAaErJbKYRzAftEfW6HAMAGMgzsmyt_gy-iaTs",
 };
 
 client
@@ -60,18 +60,22 @@ async function prooffunc() {
   //   .then((something) => console.log(something))
   //   .catch((err) => console.log(err))
 
-  client
-    .login({
-      ethAuthProofString: proofString,
-    })
-    .then((something) => console.log(something))
-    .catch((err) => console.log(err))
+  // client
+  //   .login({
+  //     ethAuthProofString: proofString,
+  //   })
+  //   .then((something) => console.log(something))
+  //   .catch((err) => console.log(err))
   
-    await client
-    .getAccount({
-      address: wallet.address,
-    }, authHeaders)
-    .then((data) => console.log("Account data is", data)).catch((err) => console.log(err))
+  //   await client
+  //   .getAccount({
+  //     address: wallet.address,
+  //   }, authHeaders)
+  //     .then((data) => console.log("Account data is", data)).catch((err) => console.log(err))
+  
+  await client.getAllOrganizations(authHeaders).then((data) => console.log("All Organizations data is", data)).catch((err) => console.log(err))
+  // await client.createOrganization({name: "my stupid org", token: TokenType.USDC}, authHeaders).then((data) => console.log("createOrganization data is", data)).catch((err) => console.log(err))
+  // await client.createOrganizationMember({organizationID: '6764f9b8-ad49-48e7-ab48-e35a33cce1cf', memberAddress: wallet.address, role: "owner", isAdmin: true, salary: 0}).then((data) => console.log("createOrganizationMember data is", data)).catch((err) => console.log(err))
 }
 
   // client.login({

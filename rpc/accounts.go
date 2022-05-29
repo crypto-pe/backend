@@ -63,7 +63,7 @@ func (s *RPC) CreateAccount(ctx context.Context, ethAuthProofString string, name
 	dbAccount := sqlc.CreateUserParams{
 		Name:    name,
 		Email:   email,
-		Address: []byte(addr),
+		Address: addr,
 	}
 
 	account, err := data.DB.CreateUser(ctx, dbAccount)
@@ -76,7 +76,7 @@ func (s *RPC) CreateAccount(ctx context.Context, ethAuthProofString string, name
 	}
 
 	responseAccount := &proto.Account{
-		Address:   prototyp.HashFromBytes(account.Address),
+		Address:   prototyp.HashFromString(account.Address),
 		Name:      account.Name,
 		Email:     account.Email.(string),
 		CreatedAt: &account.CreatedAt.Time,
@@ -129,14 +129,14 @@ func (s *RPC) Login(ctx context.Context, ethAuthProofString string) (string, *pr
 	}
 	addr := prototyp.HashFromString(proof.Address).String()
 
-	dbAccount, err := data.DB.GetUser(ctx, []byte(addr))
+	dbAccount, err := data.DB.GetUser(ctx, addr)
 	if err != nil {
 		s.Log.Err(err).Msg("unable to get account")
 		return "", nil, proto.WrapError(proto.ErrInternal, err, "unable to get account")
 	}
 
 	return jwtToken, &proto.Account{
-		Address:   prototyp.HashFromBytes(dbAccount.Address),
+		Address:   prototyp.HashFromString(dbAccount.Address),
 		Name:      dbAccount.Name,
 		Email:     dbAccount.Email.(string),
 		CreatedAt: &dbAccount.CreatedAt.Time,
@@ -145,7 +145,7 @@ func (s *RPC) Login(ctx context.Context, ethAuthProofString string) (string, *pr
 
 func (s *RPC) GetAccount(ctx context.Context, address string) (*proto.Account, error) {
 
-	dbAccount, err := data.DB.GetUser(ctx, []byte(prototyp.HashFromString(address).String()))
+	dbAccount, err := data.DB.GetUser(ctx, prototyp.HashFromString(address).String())
 	if err != nil {
 		s.Log.Err(err).Msg("Account does not exist.")
 		return nil, proto.WrapError(proto.ErrNotFound, err, "Account does not exist.")
@@ -166,7 +166,7 @@ func (s *RPC) UpdateAccount(ctx context.Context, account *proto.Account) (bool, 
 	address, name, email := account.Address, account.Name, account.Email
 
 	dbAccount, err := data.DB.UpdateUser(ctx, sqlc.UpdateUserParams{
-		Address: []byte(address),
+		Address: address.String(),
 		Name:    name,
 		Email:   email,
 	})
@@ -186,13 +186,13 @@ func (s *RPC) UpdateAccount(ctx context.Context, account *proto.Account) (bool, 
 }
 
 func (s *RPC) DeleteAccount(ctx context.Context) (bool, error) {
-	user, ok := ctx.Value(middleware.UserCtxKey).(*sqlc.Accounts)
+	user, ok := ctx.Value(middleware.UserCtxKey).(sqlc.Accounts)
 	if !ok {
 		s.Log.Err(errors.New("User does not exist")).Msg("Could not get user.")
 		return false, proto.WrapError(proto.ErrPermissionDenied, errors.New("User does not exist"), "Could not get user")
 	}
 
-	err := data.DB.DeleteUser(ctx, []byte(user.Address))
+	err := data.DB.DeleteUser(ctx, user.Address)
 	if err != nil {
 		s.Log.Err(err).Msg("Error while deleting account.")
 		return false, proto.WrapError(proto.ErrInternal, err, "Error while deleting account.")

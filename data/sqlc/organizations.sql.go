@@ -20,8 +20,8 @@ RETURNING id, name, created_at, owner_address, token
 
 type CreateOrganizationParams struct {
 	Name         string `json:"name"`
-	OwnerAddress []byte `json:"ownerAddress"`
-	Token        []byte `json:"token"`
+	OwnerAddress string `json:"ownerAddress"`
+	Token        string `json:"token"`
 }
 
 // id	uuid [uuid_generate_v4()]
@@ -56,7 +56,7 @@ const getAllOrganizations = `-- name: GetAllOrganizations :many
 SELECT id, name, created_at, owner_address, token FROM organizations WHERE id IN (SELECT organization_id FROM organization_members WHERE member_address=$1)
 `
 
-func (q *Queries) GetAllOrganizations(ctx context.Context, memberAddress []byte) ([]Organizations, error) {
+func (q *Queries) GetAllOrganizations(ctx context.Context, memberAddress string) ([]Organizations, error) {
 	rows, err := q.db.QueryContext(ctx, getAllOrganizations, memberAddress)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ RETURNING id, name, created_at, owner_address, token
 type UpdateOrganizationParams struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
-	Token []byte    `json:"token"`
+	Token string    `json:"token"`
 }
 
 func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (Organizations, error) {

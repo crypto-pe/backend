@@ -24,7 +24,7 @@ RETURNING organization_id, member_address, date_joined, role, is_admin, salary
 
 type CreateOrganizationMemberParams struct {
 	OrganizationID uuid.UUID      `json:"organizationID"`
-	MemberAddress  []byte         `json:"memberAddress"`
+	MemberAddress  string         `json:"memberAddress"`
 	Role           string         `json:"role"`
 	IsAdmin        sql.NullBool   `json:"isAdmin"`
 	Salary         sql.NullString `json:"salary"`
@@ -63,7 +63,7 @@ WHERE  organization_id = $1 AND member_address = $2
 
 type DeleteOrganizationMemberParams struct {
 	OrganizationID uuid.UUID `json:"organizationID"`
-	MemberAddress  []byte    `json:"memberAddress"`
+	MemberAddress  string    `json:"memberAddress"`
 }
 
 func (q *Queries) DeleteOrganizationMember(ctx context.Context, arg DeleteOrganizationMemberParams) error {
@@ -113,7 +113,7 @@ WHERE organization_id = $1 AND member_address = $2
 
 type GetOrganizationMemberParams struct {
 	OrganizationID uuid.UUID `json:"organizationID"`
-	MemberAddress  []byte    `json:"memberAddress"`
+	MemberAddress  string    `json:"memberAddress"`
 }
 
 func (q *Queries) GetOrganizationMember(ctx context.Context, arg GetOrganizationMemberParams) (OrganizationMembers, error) {
@@ -170,7 +170,7 @@ RETURNING organization_id, member_address, date_joined, role, is_admin, salary
 
 type UpdateOrganizationMemberParams struct {
 	OrganizationID uuid.UUID      `json:"organizationID"`
-	MemberAddress  []byte         `json:"memberAddress"`
+	MemberAddress  string         `json:"memberAddress"`
 	Role           string         `json:"role"`
 	IsAdmin        sql.NullBool   `json:"isAdmin"`
 	Salary         sql.NullString `json:"salary"`

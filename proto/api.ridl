@@ -149,6 +149,5 @@ service API
   # salary
   #
   - CreateSalaryPayments(organizationID: string, memberAddressesAmountMap: map<string, uint64>, transactionHash: string, tokenType: TokenType) => (status: bool, payments: []Payment)
-  - GetSalaryPaymentByTxnHash(transactionHash: string) => (payment: Payment)
   - GetOrgMemberSalaryPaymentsHistory(organizationID: string, memberAddress: string) => (payments: []Payment)
   - GetMemberOverallSalaryHistory(memberAddress: string) => (payments: []Payment)

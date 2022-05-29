@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strconv"
 
 	"github.com/0xsequence/go-sequence/lib/prototyp"
 	"github.com/crypto-pe/backend/data"
@@ -26,15 +28,14 @@ func (s *RPC) CreateOrganizationMember(ctx context.Context, organizationID strin
 	if !isCurrentUserAdmin {
 		return false, nil, proto.WrapError(proto.ErrPermissionDenied, errors.New("not an admin"), "not an admin")
 	}
-
 	orgMember, err := data.DB.CreateOrganizationMember(ctx, sqlc.CreateOrganizationMemberParams{
 		OrganizationID: organizationUuid,
-		MemberAddress:  []byte(memberAddress),
+		MemberAddress:  memberAddress,
 		Role:           role,
 		IsAdmin:        sql.NullBool{Bool: isAdmin, Valid: true},
-		Salary: sql.NullInt32{
-			Int32: int32(salary),
-			Valid: true,
+		Salary: sql.NullString{
+			String: fmt.Sprintf("%d", salary),
+			Valid:  true,
 		},
 	})
 
@@ -45,10 +46,10 @@ func (s *RPC) CreateOrganizationMember(ctx context.Context, organizationID strin
 
 	responseOrgMember := &proto.OrganizationMember{
 		OrganizationID: organizationUuid.String(),
-		MemberAddress:  prototyp.HashFromBytes(orgMember.MemberAddress),
+		MemberAddress:  prototyp.HashFromString(orgMember.MemberAddress),
 		Role:           orgMember.Role,
 		IsAdmin:        orgMember.IsAdmin.Bool,
-		Salary:         uint64(orgMember.Salary.Int32),
+		Salary:         uint64(salary),
 		DateJoined:     &orgMember.DateJoined,
 	}
 	return true, responseOrgMember, nil
@@ -62,18 +63,20 @@ func (s *RPC) GetOrganizationMember(ctx context.Context, organizationID string, 
 	}
 	dbMember, err := data.DB.GetOrganizationMember(ctx, sqlc.GetOrganizationMemberParams{
 		OrganizationID: organizationUuid,
-		MemberAddress:  []byte(memberAddress),
+		MemberAddress:  memberAddress,
 	})
 	if err != nil {
 		s.Log.Err(err).Msg("Could not get organization member")
 		return nil, proto.WrapError(proto.ErrInternal, err, "Could not get organization member")
 	}
+	salaryINT, _ := strconv.Atoi(dbMember.Salary.String)
+
 	responseOrgMember := &proto.OrganizationMember{
 		OrganizationID: organizationUuid.String(),
-		MemberAddress:  prototyp.HashFromBytes(dbMember.MemberAddress),
+		MemberAddress:  prototyp.HashFromString(dbMember.MemberAddress),
 		Role:           dbMember.Role,
 		IsAdmin:        dbMember.IsAdmin.Bool,
-		Salary:         uint64(dbMember.Salary.Int32),
+		Salary:         uint64(salaryINT),
 		DateJoined:     &dbMember.DateJoined,
 	}
 	return responseOrgMember, nil
@@ -92,12 +95,13 @@ func (s *RPC) GetAllOrganizationMembers(ctx context.Context, organizationID stri
 	}
 	responseOrgMembers := make([]*proto.OrganizationMember, len(dbMembers))
 	for i, dbMember := range dbMembers {
+		salaryINT, _ := strconv.Atoi(dbMember.Salary.String)
 		responseOrgMembers[i] = &proto.OrganizationMember{
 			OrganizationID: organizationUuid.String(),
-			MemberAddress:  prototyp.HashFromBytes(dbMember.MemberAddress),
+			MemberAddress:  prototyp.HashFromString(dbMember.MemberAddress),
 			Role:           dbMember.Role,
 			IsAdmin:        dbMember.IsAdmin.Bool,
-			Salary:         uint64(dbMember.Salary.Int32),
+			Salary:         uint64(salaryINT),
 			DateJoined:     &dbMember.DateJoined,
 		}
 	}
@@ -122,24 +126,26 @@ func (s *RPC) UpdateOrganizationMember(ctx context.Context, organizationMember *
 
 	dbOrgMember, err := data.DB.UpdateOrganizationMember(ctx, sqlc.UpdateOrganizationMemberParams{
 		OrganizationID: organizationUuid,
-		MemberAddress:  []byte(organizationMember.MemberAddress),
+		MemberAddress:  organizationMember.MemberAddress.String(),
 		Role:           organizationMember.Role,
 		IsAdmin:        sql.NullBool{Bool: organizationMember.IsAdmin, Valid: true},
-		Salary: sql.NullInt32{
-			Int32: int32(organizationMember.Salary),
-			Valid: true,
+		Salary: sql.NullString{
+			String: fmt.Sprintf("%d", organizationMember.Salary),
+			Valid:  true,
 		},
 	})
 
 	if err != nil {
 		return false, nil, proto.WrapError(proto.ErrInternal, err, "Could not update organization member")
 	}
+	salaryINT, _ := strconv.Atoi(dbOrgMember.Salary.String)
+
 	return true, &proto.OrganizationMember{
 		OrganizationID: organizationUuid.String(),
-		MemberAddress:  prototyp.HashFromBytes(dbOrgMember.MemberAddress),
+		MemberAddress:  prototyp.HashFromString(dbOrgMember.MemberAddress),
 		Role:           dbOrgMember.Role,
 		IsAdmin:        dbOrgMember.IsAdmin.Bool,
-		Salary:         uint64(dbOrgMember.Salary.Int32),
+		Salary:         uint64(salaryINT),
 		DateJoined:     &dbOrgMember.DateJoined,
 	}, nil
 }
@@ -162,7 +168,7 @@ func (s *RPC) DeleteOrganizationMember(ctx context.Context, organizationID, memb
 
 	err = data.DB.DeleteOrganizationMember(ctx, sqlc.DeleteOrganizationMemberParams{
 		OrganizationID: organizationUuid,
-		MemberAddress:  []byte(memberAddress),
+		MemberAddress:  memberAddress,
 	})
 
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 )
 
 type Accounts struct {
-	Address   []byte       `json:"address"`
+	Address   string       `json:"address"`
 	Name      string       `json:"name"`
 	CreatedAt sql.NullTime `json:"createdAt"`
 	Email     interface{}  `json:"email"`
@@ -21,7 +21,7 @@ type Accounts struct {
 
 type OrganizationMembers struct {
 	OrganizationID uuid.UUID      `json:"organizationID"`
-	MemberAddress  []byte         `json:"memberAddress"`
+	MemberAddress  string         `json:"memberAddress"`
 	DateJoined     time.Time      `json:"dateJoined"`
 	Role           string         `json:"role"`
 	IsAdmin        sql.NullBool   `json:"isAdmin"`
@@ -32,16 +32,16 @@ type Organizations struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
 	CreatedAt    time.Time `json:"createdAt"`
-	OwnerAddress []byte    `json:"ownerAddress"`
-	Token        []byte    `json:"token"`
+	OwnerAddress string    `json:"ownerAddress"`
+	Token        string    `json:"token"`
 }
 
 type SalaryPayments struct {
 	PaymentID       uuid.UUID `json:"paymentID"`
 	OrganizationID  uuid.UUID `json:"organizationID"`
-	MemberAddress   []byte    `json:"memberAddress"`
+	MemberAddress   string    `json:"memberAddress"`
 	TransactionHash string    `json:"transactionHash"`
 	Amount          string    `json:"amount"`
-	Token           []byte    `json:"token"`
+	Token           string    `json:"token"`
 	Date            time.Time `json:"date"`
 }

@@ -17,7 +17,7 @@ RETURNING address, name, created_at, email, admin
 `
 
 type CreateUserParams struct {
-	Address []byte      `json:"address"`
+	Address string      `json:"address"`
 	Name    string      `json:"name"`
 	Email   interface{} `json:"email"`
 }
@@ -45,7 +45,7 @@ DELETE FROM accounts
 WHERE address = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, address []byte) error {
+func (q *Queries) DeleteUser(ctx context.Context, address string) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, address)
 	return err
 }
@@ -54,7 +54,7 @@ const getUser = `-- name: GetUser :one
 SELECT address, name, created_at, email, admin FROM accounts WHERE address = $1
 `
 
-func (q *Queries) GetUser(ctx context.Context, address []byte) (Accounts, error) {
+func (q *Queries) GetUser(ctx context.Context, address string) (Accounts, error) {
 	row := q.db.QueryRowContext(ctx, getUser, address)
 	var i Accounts
 	err := row.Scan(
@@ -77,7 +77,7 @@ RETURNING address, name, created_at, email, admin
 `
 
 type UpdateUserParams struct {
-	Address []byte      `json:"address"`
+	Address string      `json:"address"`
 	Name    string      `json:"name"`
 	Email   interface{} `json:"email"`
 }

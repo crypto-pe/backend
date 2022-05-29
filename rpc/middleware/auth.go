@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/0xsequence/go-sequence/lib/prototyp"
@@ -83,8 +84,9 @@ func Session(next http.Handler) http.Handler {
 		if accountClaim != "" {
 			httplog.LogEntrySetField(r.Context(), "jwtAccount", accountClaim)
 			// user, _ := data.DB.Users.FindByAddress(context.Background(), prototyp.HashFromString(accountClaim))
-			user, err := data.DB.GetUser(ctx, []byte(prototyp.HashFromString(accountClaim)))
+			user, err := data.DB.GetUser(ctx, prototyp.HashFromString(accountClaim).String())
 			// Wallet account address, from jwt claims
+			fmt.Println("wtfWOiefnrwoaenwaoiwnefoainweofiweanfpawoefinaweonfwaerfoin?", err)
 			ctx = context.WithValue(ctx, WalletCtxKey, accountClaim)
 
 			if err == nil {
