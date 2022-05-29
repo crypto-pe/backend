@@ -7,15 +7,14 @@ package sqlc
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
 
 const createSalaryPayment = `-- name: CreateSalaryPayment :one
 
-INSERT INTO salary_payments(organization_id, member_address, transaction_hash, amount, token, date)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO salary_payments(organization_id, member_address, transaction_hash, amount, token)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING payment_id, organization_id, member_address, transaction_hash, amount, token, date
 `
 
@@ -23,9 +22,8 @@ type CreateSalaryPaymentParams struct {
 	OrganizationID  uuid.UUID `json:"organizationID"`
 	MemberAddress   []byte    `json:"memberAddress"`
 	TransactionHash string    `json:"transactionHash"`
-	Amount          int32     `json:"amount"`
+	Amount          string    `json:"amount"`
 	Token           []byte    `json:"token"`
-	Date            time.Time `json:"date"`
 }
 
 // payment_id	uuid [uuid_generate_v4()]
@@ -42,7 +40,6 @@ func (q *Queries) CreateSalaryPayment(ctx context.Context, arg CreateSalaryPayme
 		arg.TransactionHash,
 		arg.Amount,
 		arg.Token,
-		arg.Date,
 	)
 	var i SalaryPayments
 	err := row.Scan(
@@ -57,13 +54,54 @@ func (q *Queries) CreateSalaryPayment(ctx context.Context, arg CreateSalaryPayme
 	return i, err
 }
 
-const getAllMemberSalaryPayments = `-- name: GetAllMemberSalaryPayments :many
+const getMemberOverallSalaryHistory = `-- name: GetMemberOverallSalaryHistory :many
 SELECT payment_id, organization_id, member_address, transaction_hash, amount, token, date FROM salary_payments
-WHERE member_address = $1
+WHERE member_address = $1 ORDER BY date DESC
 `
 
-func (q *Queries) GetAllMemberSalaryPayments(ctx context.Context, memberAddress []byte) ([]SalaryPayments, error) {
-	rows, err := q.db.QueryContext(ctx, getAllMemberSalaryPayments, memberAddress)
+func (q *Queries) GetMemberOverallSalaryHistory(ctx context.Context, memberAddress []byte) ([]SalaryPayments, error) {
+	rows, err := q.db.QueryContext(ctx, getMemberOverallSalaryHistory, memberAddress)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SalaryPayments
+	for rows.Next() {
+		var i SalaryPayments
+		if err := rows.Scan(
+			&i.PaymentID,
+			&i.OrganizationID,
+			&i.MemberAddress,
+			&i.TransactionHash,
+			&i.Amount,
+			&i.Token,
+			&i.Date,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOrgMemberSalaryPaymentsHistory = `-- name: GetOrgMemberSalaryPaymentsHistory :many
+SELECT payment_id, organization_id, member_address, transaction_hash, amount, token, date FROM salary_payments
+WHERE member_address = $1 AND organization_id = $2
+`
+
+type GetOrgMemberSalaryPaymentsHistoryParams struct {
+	MemberAddress  []byte    `json:"memberAddress"`
+	OrganizationID uuid.UUID `json:"organizationID"`
+}
+
+func (q *Queries) GetOrgMemberSalaryPaymentsHistory(ctx context.Context, arg GetOrgMemberSalaryPaymentsHistoryParams) ([]SalaryPayments, error) {
+	rows, err := q.db.QueryContext(ctx, getOrgMemberSalaryPaymentsHistory, arg.MemberAddress, arg.OrganizationID)
 	if err != nil {
 		return nil, err
 	}

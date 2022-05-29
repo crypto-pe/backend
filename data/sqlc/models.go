@@ -20,12 +20,12 @@ type Accounts struct {
 }
 
 type OrganizationMembers struct {
-	OrganizationID uuid.UUID     `json:"organizationID"`
-	MemberAddress  []byte        `json:"memberAddress"`
-	DateJoined     time.Time     `json:"dateJoined"`
-	Role           string        `json:"role"`
-	IsAdmin        sql.NullBool  `json:"isAdmin"`
-	Salary         sql.NullInt32 `json:"salary"`
+	OrganizationID uuid.UUID      `json:"organizationID"`
+	MemberAddress  []byte         `json:"memberAddress"`
+	DateJoined     time.Time      `json:"dateJoined"`
+	Role           string         `json:"role"`
+	IsAdmin        sql.NullBool   `json:"isAdmin"`
+	Salary         sql.NullString `json:"salary"`
 }
 
 type Organizations struct {
@@ -41,7 +41,7 @@ type SalaryPayments struct {
 	OrganizationID  uuid.UUID `json:"organizationID"`
 	MemberAddress   []byte    `json:"memberAddress"`
 	TransactionHash string    `json:"transactionHash"`
-	Amount          int32     `json:"amount"`
+	Amount          string    `json:"amount"`
 	Token           []byte    `json:"token"`
 	Date            time.Time `json:"date"`
 }

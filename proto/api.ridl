@@ -144,3 +144,11 @@ service API
   - UpdateOrganizationMember(organizationMember: OrganizationMember) => (updateStatus: bool, organizationMember: OrganizationMember)
 
   - DeleteOrganizationMember(organizationID: string, memberAddress: string) => (deleteStatus: bool)
+
+  #
+  # salary
+  #
+  - CreateSalaryPayments(organizationID: string, memberAddressesAmountMap: map<string, uint64>, transactionHash: string, tokenType: TokenType) => (status: bool, payments: []Payment)
+  - GetSalaryPaymentByTxnHash(transactionHash: string) => (payment: Payment)
+  - GetOrgMemberSalaryPaymentsHistory(organizationID: string, memberAddress: string) => (payments: []Payment)
+  - GetMemberOverallSalaryHistory(memberAddress: string) => (payments: []Payment)

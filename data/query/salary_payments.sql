@@ -6,15 +6,19 @@
 -- token	bytea	
 -- date	timestamp
 
--- name: CreateSalaryPayment :one
-INSERT INTO salary_payments(organization_id, member_address, transaction_hash, amount, token, date)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING *;
+-- name: CreateSalaryPayments :copyfrom
+INSERT INTO salary_payments(organization_id, member_address, transaction_hash, amount, token)
+VALUES ($1, $2, $3, $4, $5);
 
--- name: GetSalaryPayment :one
+-- name: GetSalaryPaymentsByTransaction :many
 SELECT * FROM salary_payments
 WHERE transaction_hash = $1;
 
--- name: GetAllMemberSalaryPayments :many
+-- name: GetOrgMemberSalaryPaymentsHistory :many
 SELECT * FROM salary_payments
-WHERE member_address = $1;
+WHERE member_address = $1 AND organization_id = $2;
+
+-- name: GetMemberOverallSalaryHistory :many
+SELECT * FROM salary_payments
+WHERE member_address = $1 ORDER BY date DESC;
+
