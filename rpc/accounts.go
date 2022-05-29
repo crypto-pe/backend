@@ -145,7 +145,7 @@ func (s *RPC) Login(ctx context.Context, ethAuthProofString string) (string, *pr
 
 func (s *RPC) GetAccount(ctx context.Context, address string) (*proto.Account, error) {
 
-	dbAccount, err := data.DB.GetUser(ctx, []byte(address))
+	dbAccount, err := data.DB.GetUser(ctx, []byte(prototyp.HashFromString(address).String()))
 	if err != nil {
 		s.Log.Err(err).Msg("Account does not exist.")
 		return nil, proto.WrapError(proto.ErrNotFound, err, "Account does not exist.")

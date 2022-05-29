@@ -13,13 +13,9 @@ import {
 
 const client = new API('http://localhost:8000', fetch)
 
-client.ping().then((something) => console.log(something))
-
-client.ping().then((something) => console.log(something));
-
 const authHeaders = {
   Authorization:
-    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiMHhlMGM5ODI4ZGVlMzQxMWEyOGNjYjRiYjgyYTE4ZDBhYWQyNDQ4OWUwIiwiYXBwIjoiYXBpLXRlc3RpbmctY2xpZW50IiwiZXhwIjoxNjc5NjgxMzYyLCJpYXQiOjE2NTM3NjEzNjJ9.4XFQLahOuGixtoa7I_iL8rRwkN0hPb3bwABVHGSVPgw",
+    "BEARER eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiMHhlMGM5ODI4ZGVlMzQxMWEyOGNjYjRiYjgyYTE4ZDBhYWQyNDQ4OWUwIiwiYXBwIjoiYXBpLXRlc3RpbmctY2xpZW50IiwiZXhwIjoxNjc5NzIyNTg1LCJpYXQiOjE2NTM4MDI1ODV9.dTCx9t-tG0SDF7JBAOKCZwwQsiNxejYFOsV0uIPoId4",
 };
 
 client
@@ -70,6 +66,12 @@ async function prooffunc() {
     })
     .then((something) => console.log(something))
     .catch((err) => console.log(err))
+  
+    await client
+    .getAccount({
+      address: wallet.address,
+    }, authHeaders)
+    .then((data) => console.log("Account data is", data)).catch((err) => console.log(err))
 }
 
   // client.login({
@@ -78,12 +80,7 @@ async function prooffunc() {
 
 prooffunc();
 
-client
-  .getAccount({
-    address:
-      '0x307865306339383238646565333431316132386363623462623832613138643061616432343438396530',
-  })
-  .then((data) => console.log("Account data is", data))
+
 
   // // client.getAccount(
 // //     {
