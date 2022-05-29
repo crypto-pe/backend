@@ -8,7 +8,6 @@ package sqlc
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -16,9 +15,9 @@ import (
 const createOrganizationMember = `-- name: CreateOrganizationMember :one
 
 INSERT INTO organization_members(
-  organization_id, member_address, date_joined, role, is_admin, salary
+  organization_id, member_address, role, is_admin, salary
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
 RETURNING organization_id, member_address, date_joined, role, is_admin, salary
 `
@@ -26,7 +25,6 @@ RETURNING organization_id, member_address, date_joined, role, is_admin, salary
 type CreateOrganizationMemberParams struct {
 	OrganizationID uuid.UUID     `json:"organizationID"`
 	MemberAddress  []byte        `json:"memberAddress"`
-	DateJoined     time.Time     `json:"dateJoined"`
 	Role           string        `json:"role"`
 	IsAdmin        sql.NullBool  `json:"isAdmin"`
 	Salary         sql.NullInt32 `json:"salary"`
@@ -42,7 +40,6 @@ func (q *Queries) CreateOrganizationMember(ctx context.Context, arg CreateOrgani
 	row := q.db.QueryRowContext(ctx, createOrganizationMember,
 		arg.OrganizationID,
 		arg.MemberAddress,
-		arg.DateJoined,
 		arg.Role,
 		arg.IsAdmin,
 		arg.Salary,
@@ -109,18 +106,18 @@ func (q *Queries) GetAllOrganizationMembers(ctx context.Context, organizationID 
 	return items, nil
 }
 
-const getOrgamizationMember = `-- name: GetOrgamizationMember :one
+const getOrganizationMember = `-- name: GetOrganizationMember :one
 SELECT organization_id, member_address, date_joined, role, is_admin, salary FROM organization_members
 WHERE organization_id = $1 AND member_address = $2
 `
 
-type GetOrgamizationMemberParams struct {
+type GetOrganizationMemberParams struct {
 	OrganizationID uuid.UUID `json:"organizationID"`
 	MemberAddress  []byte    `json:"memberAddress"`
 }
 
-func (q *Queries) GetOrgamizationMember(ctx context.Context, arg GetOrgamizationMemberParams) (OrganizationMembers, error) {
-	row := q.db.QueryRowContext(ctx, getOrgamizationMember, arg.OrganizationID, arg.MemberAddress)
+func (q *Queries) GetOrganizationMember(ctx context.Context, arg GetOrganizationMemberParams) (OrganizationMembers, error) {
+	row := q.db.QueryRowContext(ctx, getOrganizationMember, arg.OrganizationID, arg.MemberAddress)
 	var i OrganizationMembers
 	err := row.Scan(
 		&i.OrganizationID,
@@ -164,10 +161,9 @@ func (q *Queries) GetOrganizationRoles(ctx context.Context, organizationID uuid.
 const updateOrganizationMember = `-- name: UpdateOrganizationMember :one
 UPDATE organization_members
 SET
-  date_joined = $3,
-  role = $4, 
-  is_admin = $5,
-  salary = $6
+  role = $3, 
+  is_admin = $4,
+  salary = $5
 WHERE organization_id = $1 AND member_address = $2
 RETURNING organization_id, member_address, date_joined, role, is_admin, salary
 `
@@ -175,7 +171,6 @@ RETURNING organization_id, member_address, date_joined, role, is_admin, salary
 type UpdateOrganizationMemberParams struct {
 	OrganizationID uuid.UUID     `json:"organizationID"`
 	MemberAddress  []byte        `json:"memberAddress"`
-	DateJoined     time.Time     `json:"dateJoined"`
 	Role           string        `json:"role"`
 	IsAdmin        sql.NullBool  `json:"isAdmin"`
 	Salary         sql.NullInt32 `json:"salary"`
@@ -185,7 +180,6 @@ func (q *Queries) UpdateOrganizationMember(ctx context.Context, arg UpdateOrgani
 	row := q.db.QueryRowContext(ctx, updateOrganizationMember,
 		arg.OrganizationID,
 		arg.MemberAddress,
-		arg.DateJoined,
 		arg.Role,
 		arg.IsAdmin,
 		arg.Salary,

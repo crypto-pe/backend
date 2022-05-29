@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/crypto-pe/backend/data"
 	"github.com/crypto-pe/backend/data/sqlc"
 	"github.com/crypto-pe/backend/proto"
+	"github.com/crypto-pe/backend/rpc/middleware"
 )
 
 func (s *RPC) CreateAccount(ctx context.Context, ethAuthProofString string, name string, email string) (bool, string, *proto.Account, error) {
@@ -183,9 +185,14 @@ func (s *RPC) UpdateAccount(ctx context.Context, account *proto.Account) (bool, 
 
 }
 
-func (s *RPC) DeleteAccount(ctx context.Context, address string) (bool, error) {
+func (s *RPC) DeleteAccount(ctx context.Context) (bool, error) {
+	user, ok := ctx.Value(middleware.UserCtxKey).(*sqlc.Accounts)
+	if !ok {
+		s.Log.Err(errors.New("User does not exist")).Msg("Could not get user.")
+		return false, proto.WrapError(proto.ErrPermissionDenied, errors.New("User does not exist"), "Could not get user")
+	}
 
-	err := data.DB.DeleteUser(ctx, []byte(address))
+	err := data.DB.DeleteUser(ctx, []byte(user.Address))
 	if err != nil {
 		s.Log.Err(err).Msg("Error while deleting account.")
 		return false, proto.WrapError(proto.ErrInternal, err, "Error while deleting account.")

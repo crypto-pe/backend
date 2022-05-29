@@ -170,7 +170,7 @@ func (s *RPC) GetAllOrganizations(ctx context.Context) ([]*proto.Organization, e
 }
 
 func (s *RPC) checkOrgAdmin(ctx context.Context, organizationID uuid.UUID) (bool, error) {
-	orgMember, err := data.DB.GetOrgamizationMember(ctx, sqlc.GetOrgamizationMemberParams{
+	orgMember, err := data.DB.GetOrganizationMember(ctx, sqlc.GetOrganizationMemberParams{
 		OrganizationID: organizationID,
 		MemberAddress:  []byte(ctx.Value(middleware.WalletCtxKey).(string)),
 	})

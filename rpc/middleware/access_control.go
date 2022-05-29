@@ -33,6 +33,20 @@ var (
 
 		"CreateAccount": {SessionTypePublic},
 		"Login":         {SessionTypePublic},
+
+		"GetAccount":                {SessionTypeUser, SessionTypeAdmin},
+		"UpdateAccount":             {SessionTypeUser, SessionTypeAdmin},
+		"DeleteAccount":             {SessionTypeUser, SessionTypeAdmin},
+		"CreateOrganization":        {SessionTypeUser, SessionTypeAdmin},
+		"GetOrganization":           {SessionTypeUser, SessionTypeAdmin},
+		"UpdateOrganization":        {SessionTypeUser, SessionTypeAdmin},
+		"DeleteOrganization":        {SessionTypeUser, SessionTypeAdmin},
+		"GetAllOrganizations":       {SessionTypeUser, SessionTypeAdmin},
+		"CreateOrganizationMember":  {SessionTypeUser, SessionTypeAdmin},
+		"GetOrganizationMember":     {SessionTypeUser, SessionTypeAdmin},
+		"GetAllOrganizationMembers": {SessionTypeUser, SessionTypeAdmin},
+		"UpdateOrganizationMember":  {SessionTypeUser, SessionTypeAdmin},
+		"DeleteOrganizationMember":  {SessionTypeUser, SessionTypeAdmin},
 	}
 	accessMapACL map[string]map[SessionType]bool
 )

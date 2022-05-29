@@ -7,23 +7,22 @@
 
 -- name: CreateOrganizationMember :one
 INSERT INTO organization_members(
-  organization_id, member_address, date_joined, role, is_admin, salary
+  organization_id, member_address, role, is_admin, salary
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
 RETURNING *;
 
--- name: GetOrgamizationMember :one
+-- name: GetOrganizationMember :one
 SELECT * FROM organization_members
 WHERE organization_id = $1 AND member_address = $2;
 
 -- name: UpdateOrganizationMember :one
 UPDATE organization_members
 SET
-  date_joined = $3,
-  role = $4, 
-  is_admin = $5,
-  salary = $6
+  role = $3, 
+  is_admin = $4,
+  salary = $5
 WHERE organization_id = $1 AND member_address = $2
 RETURNING *;
 

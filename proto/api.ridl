@@ -116,7 +116,7 @@ service API
 
   - UpdateAccount(account: Account) => (updateStatus: bool, account: Account)
   
-  - DeleteAccount(address: string) => (deleteStatus: bool)
+  - DeleteAccount() => (deleteStatus: bool)
 
 
   #
@@ -135,4 +135,12 @@ service API
   #
   # Organization members
   #
+  - CreateOrganizationMember(organizationID: string, memberAddress: string, role: string, isAdmin: bool, salary: int) => (createStatus: bool, organizationMember: OrganizationMember)
 
+  - GetOrganizationMember(organizationID: string, memberAddress: string) => (organizationMember: OrganizationMember)
+
+  - GetAllOrganizationMembers(organizationID: string) => (organizationMembers: []OrganizationMember)
+
+  - UpdateOrganizationMember(organizationMember: OrganizationMember) => (updateStatus: bool, organizationMember: OrganizationMember)
+
+  - DeleteOrganizationMember(organizationID: string, memberAddress: string) => (deleteStatus: bool)
